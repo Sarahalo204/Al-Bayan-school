@@ -26,7 +26,8 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), 'VITE_'); // كل متغيرات Vite لازم تبدأ بـ VITE_
+  // تحميل المتغيرات التي تبدأ بـ VITE_ أو المتغيرات المحددة يدوياً
+  const env = loadEnv(mode, process.cwd(), ''); 
 
   return {
     base: '/',
@@ -36,18 +37,25 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [react()],
     define: {
-      'process.env': env, // الآن كل المتغيرات البيئة VITE_* متاحة
+      // تعديل هام لضمان عمل المتغيرات في Vercel
+      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
       global: {},
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, './src'),
+        // التعديل الجوهري: ربط @ بالمجلد الرئيسي لأن ملفاتك هناك
+        '@': path.resolve(__dirname, '.'),
       },
     },
     build: {
       outDir: 'dist',
       assetsDir: 'assets',
       sourcemap: false,
+      // التأكد من أن Vite يرى ملف المدخل الرئيسي في مكانه الحالي
+      rollupOptions: {
+        input: path.resolve(__dirname, 'index.html'),
+      },
     },
   };
 });
